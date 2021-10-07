@@ -2,7 +2,9 @@
 using System;
 using System.ComponentModel.Design;
 using System.Diagnostics;
+using System.IO;
 using System.Net;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Task = System.Threading.Tasks.Task;
 
@@ -65,6 +67,14 @@ namespace UnityModExtension.Commands.Debug
                 return page.TargetArguments;
             }
         }
+        public string WorkingDirectory
+        {
+            get
+            {
+                GeneralOptionPage page = (GeneralOptionPage)package.GetDialogPage(typeof(GeneralOptionPage));
+                return page.WorkingDirectory;
+            }
+        }
 
         public int TargetPort
         {
@@ -88,6 +98,8 @@ namespace UnityModExtension.Commands.Debug
 
             var menuCommandID = new CommandID(CommandSet, CommandId);
             var menuItem = new OleMenuCommand(Execute, menuCommandID);
+
+            menuItem.ParametersDescription = "$";
             commandService.AddCommand(menuItem);
         }
 
@@ -112,21 +124,58 @@ namespace UnityModExtension.Commands.Debug
         /// </summary>
         /// <param name="sender">Event sender.</param>
         /// <param name="e">Event args.</param>
-        private void Execute(object _, EventArgs __)
+        private void Execute(object sender, EventArgs e)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
+
+            var eventArgs = e as OleMenuCmdEventArgs;
+            var args = string.Empty;
+            if (eventArgs.InValue != null)
+            {
+                args = eventArgs.InValue.ToString();
+            }
 
             ToolsForUnity.Init();
             if (ToolsForUnity.Loaded)
             {
                 try
                 {
-                    RunTarget();
-                    LaunchDebugger();
+                    if (string.IsNullOrEmpty(args))
+                    {
+                        RunTarget(TargetPath, WorkingDirectory, TargetArguments);
+                        LaunchDebugger(TargetPort);
+                    }
+                    else
+                    {
+                        int port = TargetPort;
+                        string arguments = TargetArguments;
+                        string path = TargetPath;
+                        string workingDirectory = WorkingDirectory;
+                        foreach (var arg in args.SplitCommandLine())
+                            switch (arg)
+                            {
+                                case var argument when arg.StartsWith($"-{nameof(TargetPath)}=", StringComparison.OrdinalIgnoreCase):
+                                    path = argument.TrimPrefix($"-{nameof(TargetPath)}=", StringComparison.OrdinalIgnoreCase).TrimMatchingQuotes('"');
+                                    break;
+                                case var argument when arg.StartsWith($"-{nameof(TargetArguments)}=", StringComparison.OrdinalIgnoreCase):
+                                    arguments = argument.TrimPrefix($"-{nameof(TargetArguments)}=", StringComparison.OrdinalIgnoreCase).TrimMatchingQuotes('"');
+                                    arguments = Regex.Unescape(arguments);
+                                    break;
+                                case var argument when arg.StartsWith($"-{nameof(WorkingDirectory)}=", StringComparison.OrdinalIgnoreCase):
+                                    workingDirectory = argument.TrimPrefix($"-{nameof(WorkingDirectory)}=", StringComparison.OrdinalIgnoreCase).TrimMatchingQuotes('"');
+                                    break;
+                                case var argument when arg.StartsWith($"-{nameof(TargetPort)}=", StringComparison.OrdinalIgnoreCase):
+                                    port = int.Parse(argument.TrimPrefix($"-{nameof(TargetPort)}=", StringComparison.OrdinalIgnoreCase));
+                                    break;
+                            }
+
+                        RunTarget(path, workingDirectory, arguments);
+                        LaunchDebugger(port);
+                    }
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
-                    UnityModExtension.Debug.Print(e.ToString());
+                    UnityModExtension.Debug.Print(ex.ToString());
                 }
             }
             else
@@ -135,22 +184,26 @@ namespace UnityModExtension.Commands.Debug
             }
         }
 
-        private void RunTarget()
+        private void RunTarget(string path, string workingDirectory, string arguments)
         {
-            var processStartInfo = new ProcessStartInfo(TargetPath)
+            if (string.IsNullOrEmpty(workingDirectory))
+                workingDirectory = Path.GetDirectoryName(path);
+
+            var processStartInfo = new ProcessStartInfo(path)
             {
-                //WorkingDirectory = pwd,
-                Arguments = TargetArguments,
+                WorkingDirectory = workingDirectory,
+                Arguments = arguments,
                 UseShellExecute = true
             };
 
             Process.Start(processStartInfo);
         }
 
-        private void LaunchDebugger()
+        private void LaunchDebugger(int port)
         {
-            var unityProcess = ToolsForUnity.CreateUnityProcess(TargetPort);
+            var unityProcess = ToolsForUnity.CreateUnityProcess(port);
             ToolsForUnity.LaunchDebugger(unityProcess);
         }
+
     }
 }

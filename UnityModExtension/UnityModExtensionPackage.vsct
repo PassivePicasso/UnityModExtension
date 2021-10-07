@@ -58,6 +58,7 @@
           If you do not want an image next to your command, remove the Icon node /> -->
       <Button guid="guidUnityModExtensionPackageCmdSet" id="RunAndStartDebugging" priority="0x0600" type="Button">
         <Parent guid="guidVSDebugGroup" id="IDG_EXECUTION" />
+        <CommandFlag>AllowParams</CommandFlag>
         <Strings>
           <ButtonText>Run Game And Start Debugging</ButtonText>
         </Strings>
