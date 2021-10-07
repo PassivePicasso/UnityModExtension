@@ -6,7 +6,8 @@ namespace UnityModExtension.Commands.Debug
     public class GeneralOptionPage : DialogPage
     {
         private string _targetPath = @"C:\Program Files (x86)\Steam\steamapps\common\Risk of Rain 2\Risk of Rain 2.exe";
-        private string _targetArguments = "";
+        private string _targetArguments = string.Empty;
+        private string _workingDirectory = string.Empty;
         private int _targetPort = 55555;
 
         [Category("Target")]
@@ -25,6 +26,16 @@ namespace UnityModExtension.Commands.Debug
         {
             get { return _targetArguments; }
             set { _targetArguments = value; }
+        }
+
+
+        [Category("Target")]
+        [DisplayName("WorkingDirectory")]
+        [Description("Extra arguments when the target run")]
+        public string WorkingDirectory
+        {
+            get { return _workingDirectory; }
+            set { _workingDirectory = value; }
         }
 
         [Category("Target")]
