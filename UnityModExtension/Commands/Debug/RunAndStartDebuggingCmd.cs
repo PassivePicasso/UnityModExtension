@@ -155,14 +155,14 @@ namespace UnityModExtension.Commands.Debug
                             switch (arg)
                             {
                                 case var argument when arg.StartsWith($"-{nameof(TargetPath)}=", StringComparison.OrdinalIgnoreCase):
-                                    path = argument.TrimPrefix($"-{nameof(TargetPath)}=", StringComparison.OrdinalIgnoreCase).TrimMatchingQuotes('"');
+                                    path = argument.TrimPrefix($"-{nameof(TargetPath)}=", StringComparison.OrdinalIgnoreCase).TrimMatchingQuotes('"').TrimMatchingQuotes('\'');
                                     break;
                                 case var argument when arg.StartsWith($"-{nameof(TargetArguments)}=", StringComparison.OrdinalIgnoreCase):
-                                    arguments = argument.TrimPrefix($"-{nameof(TargetArguments)}=", StringComparison.OrdinalIgnoreCase).TrimMatchingQuotes('"');
+                                    arguments = argument.TrimPrefix($"-{nameof(TargetArguments)}=", StringComparison.OrdinalIgnoreCase).TrimMatchingQuotes('"').TrimMatchingQuotes('\'');
                                     arguments = Regex.Unescape(arguments);
                                     break;
                                 case var argument when arg.StartsWith($"-{nameof(WorkingDirectory)}=", StringComparison.OrdinalIgnoreCase):
-                                    workingDirectory = argument.TrimPrefix($"-{nameof(WorkingDirectory)}=", StringComparison.OrdinalIgnoreCase).TrimMatchingQuotes('"');
+                                    workingDirectory = argument.TrimPrefix($"-{nameof(WorkingDirectory)}=", StringComparison.OrdinalIgnoreCase).TrimMatchingQuotes('"').TrimMatchingQuotes('\'');
                                     break;
                                 case var argument when arg.StartsWith($"-{nameof(TargetPort)}=", StringComparison.OrdinalIgnoreCase):
                                     port = int.Parse(argument.TrimPrefix($"-{nameof(TargetPort)}=", StringComparison.OrdinalIgnoreCase));

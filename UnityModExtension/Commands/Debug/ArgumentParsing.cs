@@ -36,7 +36,7 @@ namespace UnityModExtension.Commands.Debug
 
             return commandLine.Split(c =>
             {
-                if (c == '\"')
+                if (c == '\"' || c == '\'')
                     inQuotes = !inQuotes;
 
                 return !inQuotes && c == ' ';
